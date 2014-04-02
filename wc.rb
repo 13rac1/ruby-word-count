@@ -20,7 +20,7 @@ class WCRuby
     @options = Hash.new
     opt_parser = OptionParser.new do |opt|
       opt.banner = "Usage: #{__FILE__} [OPTION]... [FILE}..."
-      opt.separator "  or: #{__FILE__} [OPTION]... --files0-from=F"
+      opt.separator "  or:  #{__FILE__} [OPTION]... --files0-from=F"
       opt.separator "Print newline, word, and byte counts for each FILE, and a total line if"
       opt.separator "more than one FILE is specified.  With no FILE, or when FILE is -,"
       opt.separator "read standard input.  A word is a non-zero-length sequence of characters"
@@ -43,11 +43,11 @@ class WCRuby
       opt.on("--files0-from=F", "read input from the files specified by",
                                 "  NUL-terminated names in file F;",
                                 "  If F is - then read names from standard input") do |f|
-        @options[:files0-from] = f
+        @options[:files0_from] = f
       end
 
       opt.on("-L", "--max-line-length", "print the length of the longest line") do
-        @options[:max-length] = true
+        @options[:max_length] = true
       end
 
       opt.on("-w", "--words","print the word counts") do
@@ -56,7 +56,7 @@ class WCRuby
 
       opt.on("-h", "--help", "display this help and exit") do
         puts opt_parser
-        exit
+        exit 0
       end
     end
 
@@ -142,22 +142,31 @@ class WCRuby
   def display_output
     # Display the results, one line per file plus totals.
     @results.each do |file, result|
-      # Start with a space if there is more than one column.
-      # FIXME: What to do when there is only one result, because the other value is zero?
-      if result.count > 1
-        print " "
-      end
+      line = ""
       # Print order: newline, word, character, byte, maximum line length
       print_order = [:lines, :words, :chars, :bytes, :max_length]
 
+      # Count the number of columns being printed.
+      column_count = 0
       print_order.each do |key|
         if @options[key]
+          column_count += 1
           column_format = "%" + @max_char[key].to_s + "d"
-          printf(column_format, result[key])
-          print " "
+          line += sprintf(column_format, result[key])
+
+          # Reproduce the second column space bug in wc.
+          if column_count == 1
+            line += "  "
+          elsif
+            line += " "
+          end
         end
       end
-      puts file
+      # Start with a space if there is more than one column per wc docs.
+      if column_count > 1
+        line = " " + line
+      end
+      puts line + file
     end
 
     exit 0
