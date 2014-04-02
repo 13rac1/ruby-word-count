@@ -5,14 +5,10 @@ require 'optparse'
 class WCRuby
   # Program initialization
   def initialize
-    # Hash to store command line options.
-    @options = {}
-    # Hash of results keyed by filename
-    @results = {}
-
     # Run the program
     parse_options
     parse_input
+    parse_output
     display_output
     # Exit with success
     exit 0
@@ -20,6 +16,8 @@ class WCRuby
 
   # Parse command line input into @option array.
   def parse_options
+    # Hash to store command line options.
+    @options = Hash.new
     opt_parser = OptionParser.new do |opt|
       opt.banner = "Usage: #{__FILE__} [OPTION]... [FILE}..."
       opt.separator "  or: #{__FILE__} [OPTION]... --files0-from=F"
@@ -49,7 +47,7 @@ class WCRuby
       end
 
       opt.on("-L", "--max-line-length", "print the length of the longest line") do
-        @options[:max-line-length] = true
+        @options[:max-length] = true
       end
 
       opt.on("-w", "--words","print the word counts") do
@@ -81,65 +79,75 @@ class WCRuby
 
   # Parse STDIN or file contents to create statistics
   def parse_input
+    # Hash of results keyed by filename
+    @results = Hash.new
+
     # Enable binary read mode.
     ARGF.binmode
-
-    current_file = ARGF.filename
-    @results[ARGF.filename] = WCRubyResults.new
-
+    # FIXME: Handle CTRL-C nicely.
     # Loop through all of the characters in the input files.
     ARGF.chars do |char|
       # If the filename has changed, create a new storage structure.
-      if current_file != ARGF.filename
-        @results[ARGF.filename] = WCRubyResults.new
-      end
+      @results[ARGF.filename] ||= Hash.new(0)
 
       if @options[:bytes]
-        @results[ARGF.filename].bytes += 1
+        @results[ARGF.filename][:bytes] += 1
       end
       if @options[:chars]
-        @results[ARGF.filename].chars += 1
+        # FIXME: Count only characters, not all bytes.
+        @results[ARGF.filename][:chars] += 1
       end
       # FIXME: Handle all new line characters?
       if @options[:lines] && char == "\n"
-        @results[ARGF.filename].lines += 1
+        @results[ARGF.filename][:lines] += 1
       end
       #@max_line_length = 0
       if @options[:words] && char == ' '
-        @results[ARGF.filename].words += 1
+        @results[ARGF.filename][:words] += 1
       end
     end
   end
 
+  # Parse the results for display
+  def parse_output
+    # If more than one file was processed, calculate the totals.
+    if @results.count > 1
+      # Hash totals keyed by type (column)
+      @total = Hash.new(0)
+      # Calculate totals
+      @results.each do |file, result|
+        @total[:bytes] += result[:bytes];
+        @total[:chars] += result[:chars];
+        @total[:lines] += result[:lines];
+        @total[:words] += result[:words];
+        @total[:max_length] = result[:max_length] if result[:max_length] > @total[:max_length]
+      end
+      # Add the total hash to the results for display.
+      @results['total'] = @total
+    end
+
+    # Hash of max character max_countcount keyed by type (column).
+    @max_char = Hash.new(0)
+
+    # Calculate column by finding the max character width of an item.
+    @results.each do |result|
+      result.each do |key, item|
+        width = item.to_s.length
+        @max_char[key] = width if width > @max_char[key]        
+      end
+    end
+  end
+
+  # Display the results
   def display_output
-    @results.each { |file, result|
-      puts " #{result.lines} #{result.words} #{result.bytes} #{file}"
-    }
+    # Display the results per file
+    @results.each do |file, result|
+      puts " #{result[:lines]} #{result[:words]} #{result[:bytes]} #{result[:chars]} #{file}"
+    end
+
     exit 0
   end
 
-end
-
-# Data structure to store result data per file
-class WCRubyResults
-  attr_accessor :bytes
-  attr_accessor :chars
-  attr_accessor :lines
-  attr_accessor :max_line_length
-  attr_accessor :words
-
-  def initialize
-    # Integer byte count
-    @bytes = 0
-    # Integer character count
-    @chars = 0
-    # Integer line count
-    @lines = 0
-    # Integer max line length
-    @max_line_length = 0
-    # Integer word count
-    @words = 0
-  end
 end
 
 # Run the program
