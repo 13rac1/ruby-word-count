@@ -129,20 +129,35 @@ class WCRuby
     # Hash of max character max_countcount keyed by type (column).
     @max_char = Hash.new(0)
 
-    # Calculate column by finding the max character width of an item.
-    @results.each do |result|
-      result.each do |key, item|
-        width = item.to_s.length
-        @max_char[key] = width if width > @max_char[key]        
+    # Calculate column width by finding the max character width of the values.
+    @results.each do |file, result|
+      result.each do |key, value|
+        width = value.to_s.length
+        @max_char[key] = width if width > @max_char[key]
       end
     end
   end
 
   # Display the results
   def display_output
-    # Display the results per file
+    # Display the results, one line per file plus totals.
     @results.each do |file, result|
-      puts " #{result[:lines]} #{result[:words]} #{result[:bytes]} #{result[:chars]} #{file}"
+      # Start with a space if there is more than one column.
+      # FIXME: What to do when there is only one result, because the other value is zero?
+      if result.count > 1
+        print " "
+      end
+      # Print order: newline, word, character, byte, maximum line length
+      print_order = [:lines, :words, :chars, :bytes, :max_length]
+
+      print_order.each do |key|
+        if @options[key]
+          column_format = "%" + @max_char[key].to_s + "d"
+          printf(column_format, result[key])
+          print " "
+        end
+      end
+      puts file
     end
 
     exit 0
