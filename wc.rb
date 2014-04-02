@@ -2,6 +2,9 @@
 
 require 'optparse'
 
+# Handle CTRL-C nicely.
+trap("INT") { exit 1}
+
 class WCRuby
   # Program initialization
   def initialize
@@ -84,7 +87,6 @@ class WCRuby
 
     # Enable binary read mode.
     ARGF.binmode
-    # FIXME: Handle CTRL-C nicely.
     # Loop through all of the characters in the input files.
     ARGF.chars do |char|
       # If the filename has changed, create a new storage structure.
