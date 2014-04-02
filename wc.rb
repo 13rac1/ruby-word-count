@@ -126,23 +126,22 @@ class WCRuby
       @results['total'] = @total
     end
 
-    # Hash of max character max_countcount keyed by type (column).
-    @max_char = Hash.new(0)
-
+    @column_width = 0
     # Calculate column width by finding the max character width of the values.
     @results.each do |file, result|
       result.each do |key, value|
         width = value.to_s.length
-        @max_char[key] = width if width > @max_char[key]
+        @column_width = width if width > @column_width
       end
     end
   end
 
   # Display the results
   def display_output
+    # The printf format to print decimals using @column_width spaces.
+    column_format = "%" + @column_width.to_s + "d"
     # Display the results, one line per file plus totals.
     @results.each do |file, result|
-      line = ""
       # Print order: newline, word, character, byte, maximum line length
       print_order = [:lines, :words, :chars, :bytes, :max_length]
 
@@ -151,22 +150,10 @@ class WCRuby
       print_order.each do |key|
         if @options[key]
           column_count += 1
-          column_format = "%" + @max_char[key].to_s + "d"
-          line += sprintf(column_format, result[key])
-
-          # Reproduce the second column space bug in wc.
-          if column_count == 1
-            line += "  "
-          elsif
-            line += " "
-          end
+          print sprintf(column_format, result[key]) + " "
         end
       end
-      # Start with a space if there is more than one column per wc docs.
-      if column_count > 1
-        line = " " + line
-      end
-      puts line + file
+      puts file
     end
 
     exit 0
