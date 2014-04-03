@@ -81,32 +81,44 @@ class WCRuby
   end
 
   # Parse STDIN or file contents to create statistics
+  # TODO: Handle @options[:files0_from]
   def parse_input
     # Hash of results keyed by filename
     @results = Hash.new
 
+    word_length = 0
+    line_length = 0
     # Enable binary read mode.
     ARGF.binmode
     # Loop through all of the characters in the input files.
     ARGF.chars do |char|
       # If the filename has changed, create a new storage structure.
-      @results[ARGF.filename] ||= Hash.new(0)
+      if @results[ARGF.filename].nil?
+        @results[ARGF.filename] = Hash.new(0)
+        word_length = 0
+        line_length = 0
+      end
 
-      if @options[:bytes]
-        @results[ARGF.filename][:bytes] += 1
-      end
-      if @options[:chars]
-        # FIXME: Count only characters, not all bytes.
-        @results[ARGF.filename][:chars] += 1
-      end
-      # FIXME: Handle all new line characters?
-      if @options[:lines] && char == "\n"
+      @results[ARGF.filename][:bytes] += 1
+      # FIXME: Count only characters, not all bytes.
+      @results[ARGF.filename][:chars] += 1
+      if char == "\n"
         @results[ARGF.filename][:lines] += 1
+        # If line_length is greater the stored max_length, update it.
+        if line_length > @results[ARGF.filename][:max_length]
+          @results[ARGF.filename][:max_length] = line_length
+        end
+        # Clear the counter.
+        line_length = 0
       end
-      #@max_line_length = 0
-      if @options[:words] && char == ' '
-        @results[ARGF.filename][:words] += 1
+      if char == ' ' || char == "\t" || char == "\n" || char == "\r"
+        if word_length > 0
+          @results[ARGF.filename][:words] += 1
+        end
+        word_length = 0
       end
+      word_length += 1
+      line_length += 1
     end
   end
 
