@@ -90,36 +90,47 @@ class WCRuby
     line_length = 0
     # Enable binary read mode.
     ARGF.binmode
+    # Store the current file
+    current_file = ""
     # Loop through all of the characters in the input files.
     ARGF.chars do |char|
       # If the filename has changed, create a new storage structure.
-      if @results[ARGF.filename].nil?
-        @results[ARGF.filename] = Hash.new(0)
+      if @results[ARGF .filename].nil?
+        if current_file!=""
+          # Check word and line length before starting the next file.
+          @results[current_file][:words] += 1 if word_length > 0
+          @results[current_file][:max_length] = line_length if line_length > @results[current_file][:max_length]
+        end
+        current_file = ARGF .filename
+        @results[current_file] = Hash.new(0)
         word_length = 0
         line_length = 0
       end
 
-      @results[ARGF.filename][:bytes] += 1
+      @results[current_file][:bytes] += 1
       # FIXME: Count only characters, not all bytes.
-      @results[ARGF.filename][:chars] += 1
+      @results[current_file][:chars] += 1
       if char == "\n"
-        @results[ARGF.filename][:lines] += 1
+        @results[current_file][:lines] += 1
         # If line_length is greater the stored max_length, update it.
-        if line_length > @results[ARGF.filename][:max_length]
-          @results[ARGF.filename][:max_length] = line_length
-        end
+        @results[current_file][:max_length] = line_length if line_length > @results[current_file][:max_length]
         # Clear the counter.
         line_length = 0
       end
-      if char == ' ' || char == "\t" || char == "\n" || char == "\r"
-        if word_length > 0
-          @results[ARGF.filename][:words] += 1
-        end
+      # C function isspace() defines whitespace: http://www.cplusplus.com/reference/cctype/isspace/
+      if [' ', "\t", "\n", "\v", "\f", "\r"].any? {|ws| ws == char}
+        @results[current_file][:words] += 1 if word_length > 0
         word_length = 0
+      elsif
+        word_length += 1
       end
-      word_length += 1
+
       line_length += 1
     end
+    # Check word and line length after the loop.
+    @results[current_file][:words] += 1 if word_length > 0
+    @results[current_file][:max_length] = line_length if line_length > @results[current_file][:max_length]
+
   end
 
   # Parse the results for display
