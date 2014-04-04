@@ -1,10 +1,10 @@
 #!/usr/bin/env ruby
-
 require 'optparse'
 
 # Handle CTRL-C nicely.
 trap("INT") { exit 1}
 
+# Ruby class to duplicate functionality of the GNU coreutils wc program.
 class WCRuby
   # Program initialization
   def initialize
