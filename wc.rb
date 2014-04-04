@@ -23,7 +23,7 @@ class WCRuby
     @options = Hash.new
     opt_parser = OptionParser.new do |opt|
       opt.banner = "Usage: #{__FILE__} [OPTION]... [FILE}..."
-      opt.separator "  or:  #{__FILE__} [OPTION]... --files0-from=F"
+      #opt.separator "  or:  #{__FILE__} [OPTION]... --files0-from=F"
       opt.separator "Print newline, word, and byte counts for each FILE, and a total line if"
       opt.separator "more than one FILE is specified.  With no FILE, or when FILE is -,"
       opt.separator "read standard input.  A word is a non-zero-length sequence of characters"
@@ -43,11 +43,11 @@ class WCRuby
         @options[:lines] = true
       end
 
-      opt.on("--files0-from=F", "read input from the files specified by",
-                                "  NUL-terminated names in file F;",
-                                "  If F is - then read names from standard input") do |f|
-        @options[:files0_from] = f
-      end
+      #opt.on("--files0-from=F", "read input from the files specified by",
+      #                          "  NUL-terminated names in file F;",
+      #                          "  If F is - then read names from standard input") do |f|
+      #  @options[:files0_from] = f
+      #end
 
       opt.on("-L", "--max-line-length", "print the length of the longest line") do
         @options[:max_length] = true
@@ -81,7 +81,6 @@ class WCRuby
   end
 
   # Parse STDIN or file contents to create statistics
-  # TODO: Handle @options[:files0_from]
   def parse_input
     # Hash of results keyed by filename
     @results = Hash.new
@@ -108,7 +107,7 @@ class WCRuby
       end
 
       @results[current_file][:bytes] += 1
-      # FIXME: Count only characters, not all bytes.
+      # FIXME: Count multi-byte characters as one character, separately from bytes.
       @results[current_file][:chars] += 1
       if char == "\n"
         @results[current_file][:lines] += 1
