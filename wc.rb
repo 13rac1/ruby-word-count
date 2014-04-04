@@ -95,13 +95,13 @@ class WCRuby
     # Loop through all of the characters in the input files.
     ARGF.chars do |char|
       # If the filename has changed, create a new storage structure.
-      if @results[ARGF .filename].nil?
+      if @results[ARGF.filename].nil?
         if current_file!=""
           # Check word and line length before starting the next file.
           @results[current_file][:words] += 1 if word_length > 0
           @results[current_file][:max_length] = line_length if line_length > @results[current_file][:max_length]
         end
-        current_file = ARGF .filename
+        current_file = ARGF.filename
         @results[current_file] = Hash.new(0)
         word_length = 0
         line_length = 0
