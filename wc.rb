@@ -6,14 +6,13 @@ trap("INT") { exit 1}
 
 # Ruby class to duplicate functionality of the GNU coreutils wc program.
 class WCRuby
-  # Program initialization
+  # Program initialization.
   def initialize
-    # Run the program
     parse_options
     parse_input
     parse_output
     display_output
-    # Exit with success
+    # Exit with success.
     exit 0
   end
 
@@ -25,8 +24,8 @@ class WCRuby
       opt.banner = "Usage: #{__FILE__} [OPTION]... [FILE}..."
       #opt.separator "  or:  #{__FILE__} [OPTION]... --files0-from=F"
       opt.separator "Print newline, word, and byte counts for each FILE, and a total line if"
-      opt.separator "more than one FILE is specified.  With no FILE, or when FILE is -,"
-      opt.separator "read standard input.  A word is a non-zero-length sequence of characters"
+      opt.separator "more than one FILE is specified. With no FILE, or when FILE is -,"
+      opt.separator "read standard input. A word is a non-zero-length sequence of characters"
       opt.separator "delimited by white space."
       opt.separator "The options below may be used to select which counts are printed, always in"
       opt.separator "the following order: newline, word, character, byte, maximum line length."
@@ -80,16 +79,16 @@ class WCRuby
     end
   end
 
-  # Parse STDIN or file contents to create statistics
+  # Parse STDIN or file contents to create statistics.
   def parse_input
-    # Hash of results keyed by filename
+    # Hash of results keyed by filename.
     @results = Hash.new
 
     word_length = 0
     line_length = 0
     # Enable binary read mode.
     ARGF.binmode
-    # Store the current file
+    # Store the current file.
     current_file = ""
     # Loop through all of the characters in the input files.
     ARGF.chars do |char|
@@ -132,13 +131,13 @@ class WCRuby
 
   end
 
-  # Parse the results for display
+  # Parse the results for display.
   def parse_output
     # If more than one file was processed, calculate the totals.
     if @results.count > 1
-      # Hash totals keyed by type (column)
+      # Hash totals keyed by type (column).
       @total = Hash.new(0)
-      # Calculate totals
+      # Calculate totals.
       @results.each do |file, result|
         @total[:bytes] += result[:bytes];
         @total[:chars] += result[:chars];
@@ -160,13 +159,13 @@ class WCRuby
     end
   end
 
-  # Display the results
+  # Display the results.
   def display_output
     # The printf format to print decimals using @column_width spaces.
     column_format = "%" + @column_width.to_s + "d"
     # Display the results, one line per file plus totals.
     @results.each do |file, result|
-      # Print order: newline, word, character, byte, maximum line length
+      # Print order: newline, word, character, byte, maximum line length.
       print_order = [:lines, :words, :chars, :bytes, :max_length]
 
       # Count the number of columns being printed.
@@ -185,5 +184,5 @@ class WCRuby
 
 end
 
-# Run the program
+# Run the program.
 wc_ruby = WCRuby.new
